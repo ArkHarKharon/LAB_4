@@ -19,4 +19,4 @@ void gnome_sort(vec &main_vector);
 void select_sort(vec& main_vector);
 void insert_sort(vec& main_vector);
 void shell_sort(vec& main_vector);
-void sorting(vec& main_vector, int len);
+void sorting(vec& main_vector, vec& states, sort_ptr ptr, int len);

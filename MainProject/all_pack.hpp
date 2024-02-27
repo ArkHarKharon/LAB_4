@@ -15,5 +15,7 @@
 #include "prototypes.hpp"
 #include "termcolor.hpp"
 
-using sort_ptr = std::function<void(std::vector<int>& main_vector)>;
 using vec = std::vector<int>;
+using states = std::vector<bool>;
+
+using sort_ptr = std::function<void(std::vector<int>& main_vector)>;
