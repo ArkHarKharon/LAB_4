@@ -6,25 +6,30 @@
 #include "termcolor.hpp"
 #include "prototypes.hpp"
 
-using sort_ptr = std::function<void(std::vector<int>& main_vector)>;
+using sort_ptr = std::function<void(std::vector<int>& main_vector, int& swap, int& compare)>;
 using vec = std::vector<int>;
 using states = std::vector<bool>;
 
 
-void bubble_sort(vec& main_vector)
+void bubble_sort(vec& main_vector,int &swap,int &compare)
 {
-	for (std::size_t index = 0; index < main_vector.size() - 1; index++) 
+	for (size_t i = 0; i < main_vector.size(); i++)
 	{
-		if (main_vector.at(index) > main_vector.at(index + 1))
+		for (size_t j = 0; j < main_vector.size() - 1; j++)
 		{
-			main_vector.at(index) += main_vector.at(index + 1);
-			main_vector.at(index + 1) = main_vector.at(index) - main_vector.at(index + 1);
-			main_vector.at(index) -= main_vector.at(index + 1);
+			if (main_vector.at(j) > main_vector.at(j + 1))
+			{
+				int temp = main_vector.at(j);
+				main_vector.at(j) = main_vector.at(j + 1);
+				main_vector.at(j + 1) = temp;
+				swap++;
+			}
+			compare++;
 		}
 	}
 }
 
-void shaker_sort(vec& main_vector)
+void shaker_sort(vec& main_vector, int& swap, int& compare)
 {
 	std::size_t i, j, k;
 	std::size_t n = main_vector.size();
@@ -33,37 +38,53 @@ void shaker_sort(vec& main_vector)
 	{
 		for (j = i + 1; j < n; j++)
 		{
-			if (main_vector.at(j) < main_vector.at(j -1))
+			if (main_vector.at(j) < main_vector.at(j - 1))
+			{
 				std::swap(main_vector[j], main_vector[j - 1]);
+				swap++;
+			}
+			compare++;
 		}
 		n--;
 
 		for (k = n - 1; k > i; k--)
 		{
 			if (main_vector.at(k) < main_vector.at(k - 1))
+			{
 				std::swap(main_vector.at(k), main_vector.at(k - 1));
+				swap++;
+			}
+			compare++;
 		}
 		i++;
 	}
 }
 
-void gnome_sort(vec& main_vector)
+void gnome_sort(vec& main_vector, int& swap, int& compare)
 {
 	std::size_t index = 0;
 	while (index < main_vector.size())
 	{
 		if (index == 0)
+		{
 			index++;
+			compare++;
+		}
 		if (main_vector.at(index) >= main_vector.at(index - 1))
+		{
 			index++;
-		else {
+			compare++;
+		}
+		else 
+		{
 			std::swap(main_vector.at(index), main_vector.at(index - 1));
 			index--;
+			swap++;
 		}
 	}
 }
 
-void select_sort(vec& main_vector)
+void select_sort(vec& main_vector, int& swap, int& compare)
 {
 	std::size_t i, j, min_index;
 
@@ -72,31 +93,38 @@ void select_sort(vec& main_vector)
 		min_index = i;
 		for (j = i + 1; j < main_vector.size(); j++) {
 			if (main_vector.at(j) < main_vector.at(min_index))
+			{
 				min_index = j;
+				compare++;
+			}
 		}
 
 		if (min_index != i)
+		{
 			std::swap(main_vector.at(min_index), main_vector.at(i));
+			swap++;
+		}
 	}
 }
 
-void insert_sort(vec& main_vector)
+void insert_sort(vec& main_vector, int& swap, int& compare)
 {
-	std::size_t i, key, j;
-	for (i = 1; i < main_vector.size(); i++) {
-		key = main_vector.at(i);
-		j = i - 1;
-
+	for (size_t i = 1; i < main_vector.size(); i++)
+	{
+		int key = main_vector.at(i);
+		size_t j = i - 1;
 		while (j >= 0 and main_vector.at(j) > key)
 		{
 			main_vector.at(j + 1) = main_vector.at(j);
-			j = j - 1;
+			j--;
+			swap++;
+			compare++;
 		}
 		main_vector.at(j + 1) = key;
 	}
 }
 
-void shell_sort(vec& main_vector)
+void shell_sort(vec& main_vector, int& swap, int& compare)
 {
 	for (std::size_t interval = main_vector.size() / 2; interval > 0; interval /= 2) 
 	{
@@ -105,21 +133,34 @@ void shell_sort(vec& main_vector)
 			std::size_t j;
 			int temp = main_vector.at(i);
 			for (j = i; j >= interval and main_vector.at(j - interval) > temp; j -= interval)
+			{
 				main_vector.at(j) = main_vector.at(j - interval);
+				compare++;
+				swap++;
+			}
 			main_vector.at(j) = temp;
 		}
 	}
 }
 
-void sorting(vec& main_vector,states states_vec, sort_ptr ptr, int len)
+void sorting(vec& main_vector,int len)
 {
 	system("cls");
 
 	int sort_answer{};
 	sort_ptr ptr{};
 
+	std::chrono::steady_clock::time_point start{};
+	std::chrono::steady_clock::time_point finish{};
+	std::chrono::duration<double, std::milli> duration{};
+
+	int compares{};
+	int swaps{};
+
 	do
 	{
+		print_matrix(main_vector, len);
+
 		std::cout
 			<< "\t\t\t    ----------------СОРТИРОВКА----------------\n"
 			<< "1) Я хочу выполнить пузырьковую сортировку\n"
@@ -148,16 +189,29 @@ void sorting(vec& main_vector,states states_vec, sort_ptr ptr, int len)
 		default: std::cout << termcolor::red << "Неверный индекс!" << termcolor::reset; break; return;
 		}
 
-		std::cout << "Запускаю сортировку...";
-		Sleep(1000);
-		loading(2000);
+		if (sort_answer == 7)
+			return;
 
-		print_matrix(main_vector, len, ptr);
-		Sleep(3000);
+		start = std::chrono::steady_clock::now();
+		ptr(main_vector,swaps,compares);
+		finish = std::chrono::steady_clock::now();
+		duration = (finish - start);
+
+		loading(3000, "Сортирую");
+
+		print_matrix(main_vector, len);
+		std::cout
+			<< "Сортировка завершена успешно!\n"
+			<< "Число престановок: " << swaps << "\n"
+			<< "Число сравнений: " << compares << "\n"
+			<< "Время сортировки: " << duration.count() << "мс";
+
+		Sleep(4000);
 		system("cls");
 
-		std::cout << "Сортировка завершена!";
-		Sleep(3000);
-		system("cls");
+		swaps = 0;
+		compares = 0;
+		duration.zero;
+
 	} while (sort_answer != 7);
 }
